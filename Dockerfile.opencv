@@ -1,0 +1,33 @@
+FROM cudacv-deps
+
+# extract OpenCV sources
+WORKDIR /opencv
+
+ENV opencv_ver 4.3.0
+COPY opencv-${opencv_ver}.tar.gz .
+COPY opencv_contrib-${opencv_ver}.tar.gz .
+RUN tar -xf opencv-${opencv_ver}.tar.gz && \
+    tar -xf opencv_contrib-${opencv_ver}.tar.gz && \
+    mkdir opencv-${opencv_ver}/build
+
+# build + install opencv
+WORKDIR /opencv/opencv-${opencv_ver}/build
+RUN cmake -D CMAKE_BUILD_TYPE=Release \
+          -D CMAKE_INSTALL_PREFIX=/usr/local \
+          -D OPENCV_EXTRA_MODULES_PATH=/opencv/opencv_contrib-${opencv_ver}/modules \
+          -D BUILD_EXAMPLES=OFF \
+          -D BUILD_DOCS=OFF \
+          -D BUILD_PERF_TESTS=OFF \
+          -D BUILD_TESTS=OFF \
+          -D BUILD_JAVA=OFF \
+          -D WITH_PROTOBUF=OFF \
+          -D WITH_CUDA=ON \
+          -D BUILD_opencv_apps=OFF \
+          -D BUILD_opencv_world=ON \
+          ..
+RUN time make -j5
+RUN make DESTDIR=/opt/opencv install
+RUN tar -cvjf /opt/opencv-pkg_${opencv_ver}.tar.bz2 -C /opt/opencv usr/local
+
+# TODO(fyhuang): figure out how to pack as deb package
+#RUN cpack -D CPACK_GENERATOR="DEB" -D CPACK_DEBIAN_PACKAGE_MAINTAINER="me@fyhuang.com"

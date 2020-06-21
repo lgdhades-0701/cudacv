@@ -1,0 +1,15 @@
+FROM cudacv-deps
+
+# extract OpenCV package
+WORKDIR /
+
+ENV opencv_ver 4.3.0
+COPY --from=cudacv-opencv:latest /opt/opencv-pkg_${opencv_ver}.tar.bz2 .
+RUN tar -xjvf /opencv-pkg_${opencv_ver}.tar.bz2
+
+# extra software that's useful for development
+RUN apt-get install -y \
+    less \
+    gdb \
+    x11-apps \
+    cuda-samples-10-2
